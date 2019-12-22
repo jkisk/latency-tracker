@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/jkisk/latency-tracker/lib/datafile"
+	"io/ioutil"
 	"log"
 	"sort"
 )
@@ -28,11 +29,18 @@ import (
 //}
 
 func main() {
-	chunk, err := datafile.GetInts("one.txt")
+	files, err := ioutil.ReadDir("test-data")
 	if err != nil {
 		log.Fatal(err)
 	}
-	sortAndRecord(chunk)
+
+	for _, file := range files {
+		chunk, err := datafile.GetInts("test-data/" + cdfile.Name())
+		if err != nil {
+			log.Fatal(err)
+		}
+		sortAndRecord(chunk)
+	}
 	return
 }
 
