@@ -27,15 +27,11 @@ func (b *Buckets) makeCountsByRange() {
 	}
 }
 
-// Take a sorted slice of int and increase the counts in the appropriate buckets.
+// Take a slice of int and increase the counts in the appropriate buckets.
 func (b *Buckets) fillBuckets(chunk []int) {
-	current := b.Size
 	for _, item := range chunk {
-		if item <= current {
-			b.CountsByRange[current]++
-		} else {
-			current += b.Size
-		}
+		index := item - (item % b.Size) + b.Size
+		b.CountsByRange[index]++
 	}
 	b.SampleCount += len(chunk)
 }
@@ -85,7 +81,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		sort.Ints(chunk)
+
 		reportBatchPercentiles(chunk)
 		b.fillBuckets(chunk)
 		b.reportRunningPercentiles()
@@ -93,8 +89,9 @@ func main() {
 	return
 }
 
-// ReportBatchPercentiles takes sorted slice of int and reports various percentile values from current batch.
+// ReportBatchPercentiles takes slice of int and reports various percentile values from current batch.
 func reportBatchPercentiles(chunk []int) {
+	sort.Ints(chunk)
 	p50 := chunk[5000]
 	p95 := chunk[9500]
 	p99 := chunk[9900]
