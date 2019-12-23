@@ -2,40 +2,59 @@ package main
 
 import (
 	"fmt"
+	datafile "github.com/jkisk/latency-tracker/tracker/data-input"
 	"io/ioutil"
 	"log"
-
-	"github.com/jkisk/latency-tracker/tracker/datafile"
+	"sort"
 )
 
-//Buckets keeps a slice of results at the 50th, 95th, and 99th percentile
-//for each batch of 10k ints representing latency times, and a count of batches.
+//Buckets keeps a count of results that fall within a range of times, with equal size
+//and is updated with each batch of times.
 type buckets struct {
-	Mapsy       map[int]int
-	SampleCount int
+	Mapsy                    map[int]int
+	SampleCount, Size, Limit int
 }
 
-// func (b *buckets) reportPercentile(p int) int {
-// 	for _, item := range Mapsy
-// }
-
-func (b *buckets) makeMapsyBuckets() {
+func (b *buckets) makeMapsyBucketsBetter() {
 	b.Mapsy = make(map[int]int)
-	b.Mapsy[500] = 0
-	b.Mapsy[1000] = 0
-	b.Mapsy[1500] = 0
-	b.Mapsy[2000] = 0
+	i := b.Limit/b.Size + 1
+	for i > 1 {
+		b.Mapsy[b.Limit] = 0
+		b.Limit -= b.Size
+		i--
+	}
+	fmt.Println(len(b.Mapsy))
 }
 
-// reports out which bucket a given percentile would fall in
-// func (b *buckets) reportPercentile(int) int {
+// fillBuckets take a sorted slice of int and increases the count in the appropriate buckets.
+func (b *buckets) fillBuckets(chunk []int) {
+	current := b.Size
+	for _, item := range chunk {
+		if item <= current {
+			b.Mapsy[current]++
+		} else {
+			current += b.Size
+		}
+	}
+	b.SampleCount += len(chunk)
+}
 
-// }
+func (b *buckets) rangePercentile(p int) {
+	target := (p / 100) * b.SampleCount
+	current := b.Size
+	//
+}
 
 func main() {
+	// Set limit on response time before time out, and choose a bucket size below.
+	// Smaller size will be slower and more accurate and vice versa.
 	b := new(buckets)
-	b.makeMapsyBuckets()
+
 	b.SampleCount = 0
+	b.Limit = 30000
+	b.Size = 1000
+	//(add error message if limit % size != 0?)
+	b.makeMapsyBucketsBetter()
 
 	files, err := ioutil.ReadDir("test-data")
 	if err != nil {
@@ -47,51 +66,24 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		sortAndRecord(chunk, b)
+		sort.Ints(chunk)
+		ReportBatchPercentiles(chunk)
+		b.fillBuckets(chunk)
 	}
+	fmt.Println(b.Mapsy)
 	return
 }
 
-func sortAndRecord(chunk []int, b *buckets) {
-	// move all below to method?
-	// sort.Ints(chunk)
-
-	// P50 := chunk[5000]
-	// P95 := chunk[9500]
-	// P99 := chunk[9900]
-	// //console log p50 p95 p99
-	// fmt.Printf("CURRENT BATCH:\n P50: %v\n P95: %v\n P99: %v\n", P50, P95, P99)
-
-	// prepare counts for buckets
-	one := 0
-	two := 0
-	three := 0
-	four := 0
-
-	for _, item := range chunk {
-		if item <= 500 {
-			one += 1
-		} else if item <= 1000 {
-			two += 1
-		} else if item <= 1500 {
-			three += 1
-		} else {
-			four += 1
-		}
-	}
-
-	//update buckets
-	b.Mapsy[500] += one
-	b.Mapsy[1000] += two
-	b.Mapsy[1500] += three
-	b.Mapsy[2000] += four
-
-	//update batchCount
-	b.SampleCount += len(chunk)
-	//, console log updated average of slices
-	fmt.Println(b.SampleCount)
-	fmt.Println(b.Mapsy[2000])
-	// fmt.Printf("TOTAL RUN:\n P99: %v\n", b.report99())
+// ReportBatches takes sorted slice of int and reports various percentile values from current batch.
+func ReportBatchPercentiles(chunk []int) {
+	P50 := chunk[5000]
+	P95 := chunk[9500]
+	P99 := chunk[9900]
+	//console log p50 p95 p99
+	fmt.Printf("CURRENT BATCH:\n P50: %v\n P95: %v\n P99: %v\n", P50, P95, P99)
 }
 
-//compute percentiles and update and report them every 10k items
+//
+//update batchCount
+
+// fmt.Printf("TOTAL RUN:\n P99: %v\n", b.report99())

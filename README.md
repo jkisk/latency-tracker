@@ -8,7 +8,7 @@ Go Version 1.13.4
 
 ### Data Generation
 
-You can generate sample batches of data in text files with `generate-data/main.go` adjusting min and max times according to reflect different scenarios.
+Generate sample batches of data in text files with `generate-data/main.go` adjusting min and max times to reflect different scenarios.
 
 ### Data input
 
