@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/jkisk/latency-tracker/lib/datafile"
+	"github.com/jkisk/latency-tracker/tracker/datafile"
 )
 
 //Buckets keeps a slice of results at the 50th, 95th, and 99th percentile
