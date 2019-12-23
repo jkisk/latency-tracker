@@ -1,15 +1,15 @@
-### Latency Tracker
+# Latency Tracker
 
 This tool is designed to take in large batches of server latency times and compute running percentiles.
 
-## Tech
+### Tech
 
 Go Version 1.13.4
 
-## Data Generation
+### Data Generation
 
-I generated sample batches of data in text files with `generate-data/main.go`
+You can generate sample batches of data in text files with `generate-data/main.go` adjusting min and max times according to reflect different scenarios.
 
-## Data input
+### Data input
 
-I formatted the data into slices of int with `data-input/ints.go`
+Is handled separately in `data-input/ints.go`, this could be expanded to support other data sources which could improve the performance of this tracker.
