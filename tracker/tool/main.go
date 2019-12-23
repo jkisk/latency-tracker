@@ -15,6 +15,7 @@ type Buckets struct {
 	SampleCount, Size, Max int
 }
 
+// Create map with keys that will represent range of results tallied there.
 func (b *Buckets) makeCountsByRange() {
 	b.CountsByRange = make(map[int]int)
 	i := b.Max / b.Size
@@ -26,7 +27,7 @@ func (b *Buckets) makeCountsByRange() {
 	}
 }
 
-// fillBuckets take a sorted slice of int and increases the count in the appropriate buckets.
+// Take a sorted slice of int and increase the counts in the appropriate buckets.
 func (b *Buckets) fillBuckets(chunk []int) {
 	current := b.Size
 	for _, item := range chunk {
@@ -39,6 +40,7 @@ func (b *Buckets) fillBuckets(chunk []int) {
 	b.SampleCount += len(chunk)
 }
 
+// Calculate running percentile ranges.
 func (b *Buckets) rangePercentile(p int) int {
 	target := p * b.SampleCount / 100
 	current := b.Size
@@ -54,6 +56,7 @@ func (b *Buckets) rangePercentile(p int) int {
 	return -1
 }
 
+// Report percentile ranges.
 func (b *Buckets) reportRunningPercentiles() {
 	p50 := b.rangePercentile(50)
 	p95 := b.rangePercentile(95)
@@ -76,7 +79,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(b.Max)
+
 	for _, file := range files {
 		chunk, err := datafile.GetInts("test-data/" + file.Name())
 		if err != nil {
@@ -84,7 +87,6 @@ func main() {
 		}
 		sort.Ints(chunk)
 		reportBatchPercentiles(chunk)
-		fmt.Println(b.Max)
 		b.fillBuckets(chunk)
 		b.reportRunningPercentiles()
 	}
@@ -96,6 +98,6 @@ func reportBatchPercentiles(chunk []int) {
 	p50 := chunk[5000]
 	p95 := chunk[9500]
 	p99 := chunk[9900]
-	//console log p50 p95 p99
+	// Output results for current batch.
 	fmt.Printf("CURRENT BATCH:\n P50: %v\n P95: %v\n P99: %v\n", p50, p95, p99)
 }

@@ -13,7 +13,6 @@ func main() {
 		fmt.Printf("error creating file: %v", err)
 		return
 	}
-	// check for error below while closing file at end?
 	defer f.Close()
 	for i := 0; i < 9500; i++ {
 		// min represents our fastest server response time
