@@ -11,16 +11,16 @@ import (
 //Buckets keeps a count of results that fall within a range of times, with equal size
 //and is updated with each batch of times.
 type Buckets struct {
-	Mapsy                  map[int]int
+	CountsByRange          map[int]int
 	SampleCount, Size, Max int
 }
 
-func (b *Buckets) makeMapsy() {
-	b.Mapsy = make(map[int]int)
+func (b *Buckets) makeCountsByRange() {
+	b.CountsByRange = make(map[int]int)
 	i := b.Max / b.Size
 	current := b.Max
 	for i > 0 {
-		b.Mapsy[current] = 0
+		b.CountsByRange[current] = 0
 		current -= b.Size
 		i--
 	}
@@ -31,7 +31,7 @@ func (b *Buckets) fillBuckets(chunk []int) {
 	current := b.Size
 	for _, item := range chunk {
 		if item <= current {
-			b.Mapsy[current]++
+			b.CountsByRange[current]++
 		} else {
 			current += b.Size
 		}
@@ -42,14 +42,14 @@ func (b *Buckets) fillBuckets(chunk []int) {
 func (b *Buckets) rangePercentile(p int) int {
 	target := p * b.SampleCount / 100
 	current := b.Size
-	count := b.Mapsy[current]
+	count := b.CountsByRange[current]
 
 	for current <= b.Max {
 		if count > target {
 			return current
 		}
 		current += b.Size
-		count += b.Mapsy[current]
+		count += b.CountsByRange[current]
 	}
 	return -1
 }
@@ -70,7 +70,7 @@ func main() {
 		SampleCount: 0,
 	}
 
-	b.makeMapsy()
+	b.makeCountsByRange()
 
 	files, err := ioutil.ReadDir("test-data")
 	if err != nil {
